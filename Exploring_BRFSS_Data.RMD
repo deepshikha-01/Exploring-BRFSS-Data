@@ -1,0 +1,253 @@
+---
+title: "Exploring the BRFSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+### Load data
+
+```{r load-data}
+load("brfss2013.RData")
+```
+
+
+* * *
+
+## Part 1: Data
+
+**About The Data**
+
+The Behavioral Risk Factor Surveillance System (BRFSS) is a collaborative project between all of the states in the United States (US) and participating US territories and the Centers for Disease Control and Prevention (CDC). BRFSS is an ongoing surveillance system designed to measure behavioral risk factors for the non-institutionalized adult population (18 years of age and older) residing in the US.
+
+The BRFSS objective is to collect uniform, state-specific data on preventive health practices and risk behaviors that are linked to chronic diseases, injuries, and preventable infectious diseases that affect the adult population.
+
+BRFSS conducts both land-line telephone- and cellular telephone-based surveys. Health characteristics estimated from the BRFSS pertain to the non-institutionalized adult population, aged 18 years or older, who reside in the US.
+
+
+**Generalizability**
+
+It has been mentioned in the BRFSS Overview Document that respondents were identified through telephone-based methods. Overall, an estimated 97.5% of US households had telephone service in 2012. Also, in the "Sample Description" section of the Overview Document it has been stated that Simple Random Sampling and in some cases, Disproportionate Stratified Random Sampling were used for selection of respondents.
+
+Since approximately 98% of the US population had access to telephone and random sampling was used for data collection, we can conclude that the sample was representative of the population and the results/findings drawn from the BRFSS Survey 2013 could be generalized to the US adult population. 
+
+
+**Causality**
+
+Causal connections can not be established using the BRFSS 2013 Survey as there was no random assignment involved at any stage to collect the data. It was an obervational study and can only be used to establish associations.
+
+
+**References** 
+
+  + BRFSS Codebook: brfss_codebook.html
+  + BRFSS Overview Document : Overview_2013.pdf
+  
+* * *
+
+## Part 2: Research questions
+
+
+**Research question 1:**
+
+Is there a correlation between physical activity(pa1vigm_) and general health(genhlth)? If yes, how does it vary with daily vegetable consumption (X_veglt1)?
+
+Physical activity is said to aid in improving the health of a person so with the help of above question we can study the relationship between general health and physical activity. Further, we can see how vegetable consumption in a day can cause any variations in the pattern that is observed between general health and physical activity.
+
+**Research question 2:**
+
+Is there any correlation between how much time the person sleeps(sleptim1) and general health(genhlth)? If yes, how does it vary with sex(sex)?
+
+It is generally believed that sufficient amount of sleep promotes good health so with the help of the above question we can study the association between sleep time and the overall health of an individual. Then we can see how the relationship(if any exists) between sleep time and health varies for men and women.
+
+
+**Research question 3:**
+
+Is there a correlation between adult smokers(X_rfsmok3) and the number of poor mental health days(menthlth)?
+
+This question is of interest to find if there exists any association between smoking and poor mental health which can be caused due to stress, depression and problems with emotions.
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+Firstly, a new dataframe is created from the brfss2013 dataframe so as to store all the required variables into a smaller dataframe.
+Next step involves checking the structure of the dataframe to get more understanding of the variable types in the dataframe.
+
+```{r}
+# Create a new dataframe with the required columns from the brfss2013 dataset
+mydataframe = brfss2013[, c('genhlth', 
+                            'pa1min_',
+                            'X_veglt1',
+                            'sleptim1',
+                            'sex',
+                            'X_rfsmok3', 
+                            'menthlth')]
+
+# View the data types of all the variables in the newly created dataframe
+str(mydataframe)
+
+```
+
+**Research question 1:**
+
+To begin with, the required variables from the newly created dataframe are selected and NA values are eliminated. Then, the average minutes of total physical activity per week are calculated for the respective health categories. This is followed by plotting the graph between average minutes of total physical activity per week and general health.
+
+
+```{r}
+# Calculate the average minutes of total physical activity per week for each health category
+mydataframe %>%
+  select(genhlth, pa1min_, X_veglt1) %>% 
+  na.omit() %>% 
+  group_by(genhlth) %>%
+  summarize(AveragePhysicalActivityPerWeek = mean(pa1min_))
+
+# Plot the graph
+mydataframe %>%
+  select(genhlth, pa1min_, X_veglt1) %>% 
+  na.omit() %>% 
+  group_by(genhlth) %>%
+  summarize(AveragePhysicalActivityPerWeek = mean(pa1min_)) %>% 
+  ggplot(aes(x=genhlth, y=AveragePhysicalActivityPerWeek)) +
+    geom_bar(stat="identity", fill="lightblue", color="black", width=0.75) +
+    labs(title="Graph I - Average Minutes of Physical Activity Per Week  VS  General Health", 
+        x="General Health", 
+        y="Average Physical Activity Per Week") + 
+    theme_minimal()
+
+```
+
+
+Now, we use vegetable consumption to see how the trend between average minutes of total physical activity per week and general health varies with the individual's vegetable consumption.
+
+
+```{r}
+# Calculate the average minutes of total physical activity per week for each health category based on vegetable consumption
+mydataframe %>%
+  select(genhlth, pa1min_,X_veglt1) %>% 
+  na.omit() %>% 
+  group_by(genhlth, X_veglt1) %>%
+  summarize(AveragePhysicalActivityPerWeek = mean(pa1min_))
+
+# Plot the graph
+mydataframe %>%
+  select(genhlth, pa1min_,X_veglt1) %>% 
+  na.omit() %>% 
+  group_by(genhlth, X_veglt1) %>%
+  summarize(AveragePhysicalActivityPerWeek = mean(pa1min_)) %>% 
+  ggplot(aes(x=genhlth, y=AveragePhysicalActivityPerWeek, fill=X_veglt1)) +
+    geom_bar(stat="identity", color="black", width=0.9, position=position_dodge()) +
+    labs(title="Graph II - Average Minutes of Physical Activity Per Week  
+        VS  General Health", 
+        x="General Health", 
+        y="Average Physical Activity Per Week") + 
+    theme_minimal() +
+    scale_fill_brewer(palette="Blues")
+
+```
+
+
+**Analysis**
+
+The above graphs(Graph I and Graph II) depict that with decrease in the average minutes of total physical activity per week, there is a decline in the overall health of the individual. Further, as the vegetable consumption comes into the picture, it is seen that the people who tend to eat vegetables once or more than once in a day have better general health. Thus, there exists some correlation between minutes of total physical activity per week, vegetable consumption and the general health of an individual.(There exists only correlation and no causation.)
+
+
+**Research question 2:**
+
+To begin with, the required variables from the newly created dataframe are selected and NA values are eliminated to clean the data. Then, the average sleep time per day is calculated for the respective health categories. This is followed by plotting the graph between average sleep time and general health.
+
+```{r}
+# Calculate the average number of hours a person sleeps per day based on each of the health categories
+mydataframe %>%
+  select(genhlth, sex, sleptim1) %>% 
+  na.omit() %>% 
+  group_by(genhlth) %>% 
+  summarise(AverageSleepTimePerDay = mean(sleptim1))
+
+# Plot the graph
+mydataframe %>%
+  select(genhlth, sex, sleptim1) %>% 
+  na.omit() %>% 
+  group_by(genhlth) %>% 
+  summarise(AverageSleepTimePerDay = mean(sleptim1)) %>% 
+  ggplot(aes(x=genhlth, y=AverageSleepTimePerDay)) +
+    geom_bar(stat="identity", color="black", fill="lightblue", width=0.75) +
+    labs(title="Graph III - Average Sleep Time Per Day  VS  General Health", 
+         x="General Health", 
+         y="Average Sleep Time Per Day(hours)") + 
+    theme_minimal()
+```
+
+
+Next, the sex variable is introduced to see how the trend between average sleep time per day and general health varies with the sex of the individual.
+
+```{r}
+# Calculate the average number of hours a person sleeps per day based on each of the health categories and the sex of the person
+mydataframe %>%
+  select(genhlth, sex, sleptim1) %>% 
+  na.omit() %>% 
+  group_by(genhlth, sex) %>% 
+  summarise(AverageSleepTimePerDay = mean(sleptim1))
+
+# Plot the graph
+mydataframe %>%
+  select(genhlth, sex, sleptim1) %>% 
+  na.omit() %>% 
+  group_by(genhlth, sex) %>% 
+  summarise(AverageSleepTimePerDay = mean(sleptim1)) %>% 
+  ggplot(aes(x=genhlth,y=AverageSleepTimePerDay, fill=sex)) +
+    geom_bar(stat="identity", color="black", width=0.75, position=position_dodge()) +
+    labs(title="Graph IV - Average Sleep Time Per Day  VS  General Health", 
+        x="General Health", 
+        y="Average Sleep Time Per Day(hours)") + 
+    theme_minimal() + 
+    scale_fill_brewer(palette="Blues")
+
+```
+
+
+**Analysis**
+
+The above graphs( Graph III and Graph IV) illustrate that with decrease in the number of hours a person sleeps per day, there is also a decline in the general health of the person. And when each of the general health categories is further divided according to the number of males or females, females have higher average sleep time per day as compared to males for the "Excellent", "Very Good" and "Good" health categories but as there is decline in health("Fair" and "Poor" health category), males have higher average sleep time per day.
+This shows that there exists some correlation between the sleep time per day, the general health of the individual.(This analysis only shows correlation and not causation.)
+
+**Research question 3:**
+
+The required variables from the newly created dataframe are selected , NA values are eliminated from the data and then data is grouped according to the smoking habit of each of the adults. This is followed by plotting the graph between adult smokers and the number of poor mental health days.
+
+
+```{r}
+
+# Calculate the average poor mental health days dependind upon whether the person smokes or not.
+mydataframe %>%
+  select(menthlth, X_rfsmok3) %>% 
+  na.omit() %>% 
+  group_by(X_rfsmok3) %>%
+  summarize(AveragePoorMentalHealthDays = mean(menthlth))
+
+# Plot the graph
+mydataframe %>% 
+  select(menthlth, X_rfsmok3) %>%
+  na.omit() %>% 
+  ggplot() +
+    geom_boxplot(aes(x=X_rfsmok3,y=menthlth), fill = "lightblue") + 
+    labs(title="Graph V - Poor Mental Health Days Per Month  VS  Adult Smokers", 
+        x="Adult Smokers", 
+        y="Poor Mental Health Days Per Month") + 
+    theme_minimal()
+
+```
+
+**Analysis**
+
+The graph shows that for people who smoke, the shape of the curve is more skewed to the right as compared to those who do not smoke causing the mean number of poor mental health days to be higher for smokers as comapred to non-smokers. Hence, the above graph clearly shows that the individuals who do not smoke have better mental health(lesser number of poor mental health days per month) on an average as compared to the individuals who smoke( higher number of poor mental health days per month). So this illustrates that there is a correlation between number of poor mental health days and whether an individual smokes or not.(This graph only establishes correlation and not causation.)
